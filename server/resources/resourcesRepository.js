@@ -11,7 +11,7 @@ const resourceQuery = singleLine`
 
 const pagedResourceQuery = singleLine`
 		${resourceQuery}
-		WHERE draft = $1
+		WHERE draft = $1 AND (rejected IS NULL OR rejected = false)
 		ORDER BY accession DESC
 		LIMIT $2
 		OFFSET $3;
@@ -70,3 +70,20 @@ export const update = async (id, { draft, publication, publisher }) => {
 	);
 	return updated;
 };
+
+// =====================================================
+// ============ Handle rejections in DB ================
+export const reject = async (id) => {
+	const {
+		rows: [updated],
+	} = await db.query(
+		`UPDATE resources
+         SET rejected = true, rejected_at = now()
+         WHERE id = $1
+         RETURNING *;`,
+		[id]
+	);
+	return updated;
+};
+
+// ========================================================
