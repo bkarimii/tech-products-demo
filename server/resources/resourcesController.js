@@ -84,4 +84,25 @@ router
 	)
 	.all(methodNotAllowed);
 
+// =========================================================================
+// ======= New Endpoint to reject drafts
+router.patch(
+	"/:id/reject",
+	authOnly,
+	sudoOnly,
+	asyncHandler(async (req, res) => {
+		try {
+			const resource = await service.rejectDraft(req.params.id);
+			res.send(resource);
+		} catch (err) {
+			if (err instanceof service.MissingResource) {
+				return res.sendStatus(404);
+			}
+			throw err;
+		}
+	})
+);
+
+// ====================End of changes ======================
+
 export default router;
