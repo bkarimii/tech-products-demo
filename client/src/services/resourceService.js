@@ -41,6 +41,22 @@ export default class ResourceService {
 		}
 	}
 
+	// ==========================================================================
+	// Reject a suggestion
+
+	async reject(id) {
+		const res = await this.fetch(`${ResourceService.ENDPOINT}/${id}/reject`, {
+			body: JSON.stringify({ draft: true }),
+			headers: { "Content-Type": "application/json" },
+			method: "PATCH",
+		});
+		if (res.ok) {
+			return this._revive(await res.json());
+		}
+	}
+
+	// ==========================================================================
+
 	async suggest(resource) {
 		const res = await this.fetch(ResourceService.ENDPOINT, {
 			body: JSON.stringify(resource),
