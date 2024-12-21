@@ -43,3 +43,18 @@ export async function publish(resourceId, publisherId) {
 		publication: new Date(),
 	});
 }
+
+// ==============================================================================================
+// ==========Reject a draft=================
+export const rejectDraft = async (resourceId) => {
+	const resource = await repository.findOne(resourceId);
+	if (!resource) {
+		throw new Error("Resource not found.");
+	}
+	if (resource.draft === false) {
+		throw new Error("Only drafts can be rejected.");
+	}
+	return await repository.reject(resourceId);
+};
+
+// ==============================================================================================
