@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 
 import "./ResourceList.scss";
 
-export default function ResourceList({ publish, resources }) {
+export default function ResourceList({ publish, reject, resources }) {
 	return (
 		<ul className="resource-list">
 			{resources.length === 0 && (
@@ -19,7 +19,10 @@ export default function ResourceList({ publish, resources }) {
 					{description && <p className="resource-description">{description}</p>}
 					<div>
 						<a href={url}>{formatUrl(url)}</a>
-						{publish && <button onClick={() => publish(id)}>Publish</button>}
+						<div>
+							{publish && <button onClick={() => publish(id)}>Publish</button>}
+							{publish && <button onClick={() => reject(id)}>Reject</button>}
+						</div>
 					</div>
 				</li>
 			))}
@@ -29,6 +32,7 @@ export default function ResourceList({ publish, resources }) {
 
 ResourceList.propTypes = {
 	publish: PropTypes.func,
+	reject: PropTypes.func,
 	resources: PropTypes.arrayOf(
 		PropTypes.shape({
 			description: PropTypes.string,
