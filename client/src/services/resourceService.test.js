@@ -134,4 +134,48 @@ describe("ResourceService", () => {
 			await expect(service.suggest({})).rejects.toThrow("something went wrong");
 		});
 	});
+
+	describe("reject", () => {
+		it("sends an appropriate PATCH request to the reject endpoint", async () => {
+			let request;
+			const id = "abc123";
+			const mockResponse = {
+				id,
+				draft: true,
+				title: "Rejected Resource",
+			};
+
+			server.use(
+				http.patch("/api/resources/:id/reject", ({ request: req }) => {
+					request = req;
+					return HttpResponse.json(mockResponse);
+				})
+			);
+
+			const result = await service.reject(id);
+
+			expect(new URL(request.url).pathname).toMatch(
+				new RegExp(`/${id}/reject$`)
+			);
+			await expect(request.json()).resolves.toEqual({ draft: true });
+
+			expect(result).toEqual({
+				id,
+				draft: true,
+				title: "Rejected Resource",
+			});
+		});
+
+		it("handles server errors gracefully", async () => {
+			const id = "abc123";
+
+			server.use(
+				http.patch("/api/resources/:id/reject", () => {
+					return new HttpResponse(null, { status: 400 });
+				})
+			);
+
+			await expect(service.reject(id)).rejects.toThrow("something went wrong");
+		});
+	});
 });
