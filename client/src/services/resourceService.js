@@ -50,8 +50,15 @@ export default class ResourceService {
 			headers: { "Content-Type": "application/json" },
 			method: "PATCH",
 		});
-		if (res.ok) {
-			return this._revive(await res.json());
+		switch (res.status) {
+			case 200:
+				return this._revive(await res.json());
+			case 404:
+				throw new Error("Resource not found.");
+			case 400:
+				throw new Error("Invalid request.");
+			default:
+				throw new Error("Something went wrong.");
 		}
 	}
 
