@@ -385,4 +385,36 @@ describe("/api/resources", () => {
 			expect(published).toMatchObject({ publisher: admin.id, source: user.id });
 		});
 	});
+
+	describe("PATCH /:id/reject", () => {
+		it("rejects a draft resource successfully", async () => {
+			const { agent } = await authenticateAs("superuser");
+			const resourceId = "valid-resource-id"; // Mock or create this during test setup
+
+			const { body } = await agent
+				.patch(`/api/resources/${resourceId}/reject`)
+				.set("Authorization", `Bearer ${sudoToken}`)
+				.set("User-Agent", "supertest")
+				.expect(200);
+
+			expect(body).toMatchObject({ id: resourceId, status: "rejected" });
+		});
+
+		it("returns 404 for a non-existent resource", async () => {
+			const { agent } = await authenticateAs("superuser");
+			await agent
+				.patch("/api/resources/non-existent-id/reject")
+				.set("Authorization", `Bearer ${sudoToken}`)
+				.set("User-Agent", "supertest")
+				.expect(404);
+		});
+
+		it("returns 403 for unauthorized users", async () => {
+			const { agent } = await authenticateAs("user");
+			await agent
+				.patch("/api/resources/resource-id/reject")
+				.set("User-Agent", "supertest")
+				.expect(403);
+		});
+	});
 });
