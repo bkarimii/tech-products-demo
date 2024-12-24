@@ -175,7 +175,7 @@ describe("ResourceService", () => {
 				})
 			);
 
-			await expect(service.reject(id)).rejects.toThrow("something went wrong");
+			await expect(service.reject(id)).rejects.toThrow("Invalid request.");
 		});
 	});
 });
