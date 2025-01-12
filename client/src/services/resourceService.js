@@ -41,6 +41,29 @@ export default class ResourceService {
 		}
 	}
 
+	// ==========================================================================
+	// Reject a suggestion
+
+	async reject(id) {
+		const res = await this.fetch(`${ResourceService.ENDPOINT}/${id}/reject`, {
+			body: JSON.stringify({ draft: true }),
+			headers: { "Content-Type": "application/json" },
+			method: "PATCH",
+		});
+		switch (res.status) {
+			case 200:
+				return this._revive(await res.json());
+			case 404:
+				throw new Error("Resource not found.");
+			case 400:
+				throw new Error("Invalid request.");
+			default:
+				throw new Error("Something went wrong.");
+		}
+	}
+
+	// ==========================================================================
+
 	async suggest(resource) {
 		const res = await this.fetch(ResourceService.ENDPOINT, {
 			body: JSON.stringify(resource),

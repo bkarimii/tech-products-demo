@@ -19,6 +19,19 @@ export default function Drafts() {
 		[refreshDrafts, resourceService]
 	);
 
+	// ================================================================
+
+	// Reject function to reject a suggestion
+	const reject = useCallback(
+		async (id) => {
+			await resourceService.reject(id);
+			await refreshDrafts();
+		},
+		[refreshDrafts, resourceService]
+	);
+
+	// ================================================================
+
 	useEffect(() => {
 		refreshDrafts();
 	}, [refreshDrafts]);
@@ -28,7 +41,7 @@ export default function Drafts() {
 			<h2>Drafts</h2>
 			<p>Review resources that have been submitted but not yet published.</p>
 			<section>
-				<ResourceList publish={publish} resources={drafts} />
+				<ResourceList publish={publish} resources={drafts} reject={reject} />
 			</section>
 		</>
 	);
