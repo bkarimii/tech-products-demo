@@ -8,7 +8,6 @@ it("lets admin users approve drafts", () => {
 	cy.findByRole("link", { name: /drafts/i }).click();
 	cy.findByText("Joi documentation").should("exist");
 	cy.findByRole("button", { name: /publish/i }).click();
-	cy.findByRole("button", { name: /reject/i }).click();
 	cy.findByText("Joi documentation").should("not.exist");
 	cy.logOut();
 	cy.logInAs("shh@example.com");

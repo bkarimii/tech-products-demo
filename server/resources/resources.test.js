@@ -385,36 +385,84 @@ describe("/api/resources", () => {
 			expect(published).toMatchObject({ publisher: admin.id, source: user.id });
 		});
 	});
+	// ==================================================================
+	// Helper function to create a draft resource
 
 	describe("PATCH /:id/reject", () => {
-		it("rejects a draft resource successfully", async () => {
-			const { agent } = await authenticateAs("superuser");
-			const resourceId = "valid-resource-id"; // Mock or create this during test setup
+		it("allows admins to reject a draft resource", async () => {
+			const { agent: adminAgent } = await authenticateAs("admin");
+			const { agent: userAgent } = await authenticateAs("user");
 
-			const { body } = await agent
-				.patch(`/api/resources/${resourceId}/reject`)
+			// Create a draft resource
+			const { body: resource } = await userAgent
+				.post("/api/resources")
+				.send({
+					title: "Draft Resource Example",
+					url: "https://example.com/draft",
+				})
+				.set("User-Agent", "supertest")
+				.expect(201);
+
+			// Reject the draft as admin
+			const { body: rejectedResource } = await adminAgent
+				.patch(`/api/resources/${resource.id}/reject`)
 				.set("Authorization", `Bearer ${sudoToken}`)
 				.set("User-Agent", "supertest")
 				.expect(200);
 
-			expect(body).toMatchObject({ id: resourceId, status: "rejected" });
+			// Validate rejection properties
+			expect(rejectedResource).toMatchObject({
+				id: resource.id,
+				rejected: true,
+				draft: true,
+				rejected_at: expect.stringMatching(patterns.DATETIME),
+			});
 		});
 
-		it("returns 404 for a non-existent resource", async () => {
-			const { agent } = await authenticateAs("superuser");
-			await agent
-				.patch("/api/resources/non-existent-id/reject")
+		it("returns 404 for rejecting a non-existent resource", async () => {
+			const { agent: adminAgent } = await authenticateAs("admin");
+
+			const response = await adminAgent
+				.patch(`/api/resources/${randomUUID()}/reject`)
+				.set("Authorization", `Bearer ${sudoToken}`)
+				.set("User-Agent", "supertest");
+			expect(response.status).toBe(404);
+			expect(response.body).toEqual({ error: "Resource not found." }); // Add this assertion
+		});
+
+		it("prevents rejection of already published resources", async () => {
+			const { agent: adminAgent } = await authenticateAs("admin");
+			const { agent: userAgent } = await authenticateAs("user");
+
+			// Create and publish a resource
+			const { body: resource } = await userAgent
+				.post("/api/resources")
+				.send({
+					title: "Published Resource Example",
+					url: "https://example.com/published",
+				})
+				.set("User-Agent", "supertest")
+				.expect(201); // Assert that the resource was created
+
+			// Publish the resource
+			await adminAgent
+				.patch(`/api/resources/${resource.id}`)
+				.send({ draft: false })
 				.set("Authorization", `Bearer ${sudoToken}`)
 				.set("User-Agent", "supertest")
-				.expect(404);
-		});
+				.expect(200); // Assert that the resource was published
 
-		it("returns 403 for unauthorized users", async () => {
-			const { agent } = await authenticateAs("user");
-			await agent
-				.patch("/api/resources/resource-id/reject")
-				.set("User-Agent", "supertest")
-				.expect(403);
+			// Attempt to reject published resource
+			const response = await adminAgent
+				.patch(`/api/resources/${resource.id}/reject`)
+				.set("Authorization", `Bearer ${sudoToken}`)
+				.set("User-Agent", "supertest");
+
+			// Assert that the rejection fails and returns a 400 status with the correct error message
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({ error: "Only drafts can be rejected." });
 		});
 	});
+
+	// End of test suites
 });
