@@ -95,10 +95,13 @@ router.patch(
 			const resource = await service.rejectDraft(req.params.id);
 			res.send(resource);
 		} catch (err) {
-			if (err instanceof service.MissingResource) {
-				return res.sendStatus(404);
+			if (err.message === "Resource not found.") {
+				return res.status(404).send({ error: err.message });
 			}
-			throw err;
+			if (err.message === "Only drafts can be rejected.") {
+				return res.status(400).send({ error: err.message });
+			}
+			return res.status(500).send({ error: err.message });
 		}
 	})
 );
